@@ -1,5 +1,6 @@
 #include "../include/button.h"
 
-Button::Button() { // A
+Button::Button() {
   baseColor = colors.getColor("base");
+  buttonBounds = QRectF(0, 0, 0, 0);
 }

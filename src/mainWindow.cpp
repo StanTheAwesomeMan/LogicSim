@@ -115,16 +115,25 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 }
 
 void MainWindow::timerEvent() {
-  // FrameRate
-  time.setHMS(0, 0, 0, QTime::currentTime().msec());
+  // Repaint the Screen
   repaint();
+
+  // Get the time it took to draw the screen
   frametime = abs(QTime::currentTime().msec() - time.msec());
+
+  // If its less than the frametime of the requested framerate,
+  // sleep for the rest of the time
   if (frametime < 1000 / requestedFramerate) {
     std::this_thread::sleep_for(std::chrono::milliseconds(
         1000 / (int)requestedFramerate - (int)frametime));
   }
+
+  // Get the frametime
   frametime = abs(QTime::currentTime().msec() - time.msec());
+
+  // Calculate framerate
   framerate = 1.0 / (frametime / 1000.0);
-  std::cout << framerate << std::endl;
+
+  // Set the current milliseconds
   time.setHMS(0, 0, 0, QTime::currentTime().msec());
 }

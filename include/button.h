@@ -8,7 +8,7 @@
 class Button {
 public:
   Button();
-  void setButtonBounds();
+  inline void setButtonBounds(QRectF bounds) { buttonBounds = bounds; }
   void setButtonIdentifier();
   bool buttonPressed(QPoint mousePos);
   void buttonHovering(QPoint mousePos);
