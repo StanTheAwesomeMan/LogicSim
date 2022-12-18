@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/LogicSim.dir/LogicSim_autogen/mocs_compilation.cpp.o CMakeFiles/LogicSim.dir/src/main.cpp.o -o LogicSim  /usr/lib/libQt6Widgets.so.6.4.1 /usr/lib/libQt6Gui.so.6.4.1 /usr/lib/libQt6Core.so.6.4.1 /usr/lib/libGLX.so /usr/lib/libOpenGL.so 

@@ -1,0 +1,4 @@
+/home/beacrox/LogicSim/CMakeFiles/LogicSim.dir
+/home/beacrox/LogicSim/CMakeFiles/edit_cache.dir
+/home/beacrox/LogicSim/CMakeFiles/rebuild_cache.dir
+/home/beacrox/LogicSim/CMakeFiles/LogicSim_autogen.dir
