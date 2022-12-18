@@ -147,3 +147,6 @@ ipch/
 
 # Cache files
 .cache
+
+# Other files
+compile_commands.json
