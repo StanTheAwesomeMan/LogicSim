@@ -3,12 +3,18 @@
 ################################
 *.pptx
 *.pdf
+compile_commands.json
+.clang-format
+.clang-tidy
+.editorconfig
+.gitattributes
 
 ################################
 ########### FOLDERS ############
 ################################
 build/
 html/
+CMakeFiles/
 
 ################################
 ############ C/C++ #############
@@ -149,7 +155,3 @@ ipch/
 .cache
 
 # Other files
-compile_commands.json
-.clang*
-.editorconfig
-.gitattributes
