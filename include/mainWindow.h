@@ -37,10 +37,10 @@ private:
   QPainter painter;
   std::vector<QRectF> borderBounds;
   std::vector<QRectF> lineBounds;
-  QTimer *timer = new QTimer(this);
+  QTimer *timer;
   QTime time;
   qreal frametime;
   qreal framerate;
-  qreal requestedFramerate = 165;
-  int snappingDistance = 15;
+  qreal requestedFramerate;
+  int snappingDistance;
 };

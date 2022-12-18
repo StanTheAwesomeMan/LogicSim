@@ -2,6 +2,38 @@
 #include <QMap>
 #include <qcolor.h>
 
+Colors::Colors() {
+  rosewater = QColor::fromRgb(245, 224, 220);
+  flamingo = QColor::fromRgb(242, 205, 205);
+  pink = QColor::fromRgb(245, 194, 231);
+  mauve = QColor::fromRgb(203, 166, 247);
+  red = QColor::fromRgb(243, 139, 168);
+  maroon = QColor::fromRgb(235, 160, 172);
+  peach = QColor::fromRgb(250, 179, 135);
+  yellow = QColor::fromRgb(249, 226, 175);
+  green = QColor::fromRgb(166, 227, 161);
+  teal = QColor::fromRgb(148, 226, 213);
+  sky = QColor::fromRgb(137, 220, 235);
+  sapphire = QColor::fromRgb(116, 199, 236);
+  blue = QColor::fromRgb(137, 180, 250);
+  lavender = QColor::fromRgb(180, 190, 254);
+  text = QColor::fromRgb(205, 214, 244);
+  subtext1 = QColor::fromRgb(186, 194, 222);
+  subtext0 = QColor::fromRgb(166, 173, 200);
+  overlay2 = QColor::fromRgb(147, 153, 178);
+  overlay1 = QColor::fromRgb(127, 132, 156);
+  overlay0 = QColor::fromRgb(108, 112, 134);
+  surface2 = QColor::fromRgb(88, 91, 112);
+  surface1 = QColor::fromRgb(69, 71, 90);
+  surface0 = QColor::fromRgb(49, 50, 68);
+  base = QColor::fromRgb(30, 30, 46);
+  mantle = QColor::fromRgb(24, 24, 37);
+  crust = QColor::fromRgb(17, 17, 27);
+
+  accent = blue;
+  darkAccent = accent.darker(200);
+}
+
 QColor Colors::withAlpha(QColor c, int a) {
   int r = c.red();
   int g = c.green();

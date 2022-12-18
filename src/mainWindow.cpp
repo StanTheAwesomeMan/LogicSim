@@ -17,9 +17,14 @@
 #include <vector>
 
 MainWindow::MainWindow(QWidget *parent) {
+  timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this, &MainWindow::timerEvent);
   timer->setInterval(0);
   timer->start();
+
+  frametime = framerate = 0;
+  requestedFramerate = 165;
+  snappingDistance = 15;
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {

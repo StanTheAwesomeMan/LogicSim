@@ -7,6 +7,7 @@
 
 class Button {
 public:
+  Button();
   void setButtonBounds();
   void setButtonIdentifier();
   bool buttonPressed(QPoint mousePos);
@@ -20,5 +21,5 @@ private:
   QString buttonIdentifier;
   QPainter painter;
 
-  QColor *baseColor = colors.getColor("base");
+  QColor *baseColor;
 };
