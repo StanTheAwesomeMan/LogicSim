@@ -150,3 +150,7 @@ ipch/
 
 # Other files
 compile_commands.json
+.clang*
+.editorconfig
+.gitattributes
+.gitignore
