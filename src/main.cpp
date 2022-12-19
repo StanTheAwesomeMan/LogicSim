@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
   window.setFont(font);
   window.resize(1920, 1080);
   window.setUpdatesEnabled(true);
+  window.setMouseTracking(true);
 
   // Set background color
   QPalette palette = window.palette();

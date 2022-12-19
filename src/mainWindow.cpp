@@ -119,6 +119,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
   // Move
+  menuButton.buttonHovering(event->pos());
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {

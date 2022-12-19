@@ -35,3 +35,11 @@ bool Button::buttonPressed(QPoint mousePos) {
   }
   return pressed;
 }
+
+void Button::buttonHovering(QPoint mousePos) {
+  if (buttonBounds.contains(mousePos)) {
+    hovering = true;
+    return;
+  }
+  hovering = false;
+}
