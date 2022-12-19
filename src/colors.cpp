@@ -1,5 +1,6 @@
 #include "../include/colors.h"
 #include <QMap>
+#include <iostream>
 #include <qcolor.h>
 
 Colors::Colors() {
@@ -87,7 +88,8 @@ QColor *Colors::getColor(const std::string &colorName) {
   if (colorMap.contains(colorName)) {
     return colorMap[colorName];
   }
-  return &crust;
+  std::cerr << "color '" << colorName << "' does not exist!" << std::endl;
+  exit(1);
 }
 
 Colors colors;
