@@ -1,5 +1,6 @@
 #pragma once
 
+#include "button.h"
 #include "colors.h"
 #include <QMainWindow>
 #include <QPaintEvent>
@@ -43,4 +44,5 @@ private:
   qreal framerate;
   qreal requestedFramerate;
   int snappingDistance;
+  Button menuButton;
 };

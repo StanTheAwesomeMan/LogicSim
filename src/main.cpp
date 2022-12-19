@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
   // Create the main window
   MainWindow window;
   window.setWindowTitle("Logic Simulator");
+  font.setPointSize(12);
   window.setFont(font);
   window.resize(1920, 1080);
   window.setUpdatesEnabled(true);

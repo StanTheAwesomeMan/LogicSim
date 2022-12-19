@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent) {
   frametime = framerate = 0;
   requestedFramerate = 165;
   snappingDistance = 15;
+
+  menuButton.setButtonIdentifier("MENU");
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {
@@ -43,6 +45,11 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 }
 
 void MainWindow::draw() {
+
+  if (menuButton.getQPainter() == nullptr) {
+    menuButton.setQPainter(&painter);
+  }
+
   // Lines
   painter.setPen(*colors.getColor("base"));
   for (int i = 0; i < this->height() / snappingDistance; i++) {
@@ -68,6 +75,9 @@ void MainWindow::draw() {
   // ButtonBar
   painter.setBrush(*colors.getColor("mantle"));
   painter.drawRect(0, this->height() - 40, this->width(), 40);
+
+  // Buttons
+  menuButton.draw();
 }
 
 void MainWindow::updateBorders() {
@@ -112,6 +122,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
 void MainWindow::resizeEvent(QResizeEvent *event) {
   // Stuff
   updateBorders();
+  menuButton.setButtonBounds(QRectF(5, this->height() - 35, 60, 30));
 }
 
 void MainWindow::timerEvent() {
