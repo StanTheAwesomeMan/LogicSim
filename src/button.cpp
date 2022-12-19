@@ -1,4 +1,6 @@
 #include "../include/button.h"
+#include <iostream>
+#include <ostream>
 #include <qcolor.h>
 #include <qnamespace.h>
 #include <qtextoption.h>
@@ -18,6 +20,8 @@ Button::Button() {
 }
 
 void Button::draw() {
+  if (painter == nullptr)
+    return;
   painter->setPen(Qt::transparent);
   QColor c = pressed ? *pressedColor : (hovering ? *hoverColor : *baseColor);
   painter->setBrush(c);

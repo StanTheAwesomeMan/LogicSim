@@ -2,6 +2,7 @@
 
 #include "button.h"
 #include "colors.h"
+#include "gate.h"
 #include <QMainWindow>
 #include <QPaintEvent>
 #include <QPainter>
@@ -10,7 +11,9 @@
 #include <qevent.h>
 #include <qline.h>
 #include <qpainter.h>
+#include <qpainterpath.h>
 #include <qpalette.h>
+#include <qpoint.h>
 #include <qsize.h>
 #include <qtimer.h>
 #include <qtransform.h>
@@ -27,6 +30,7 @@ protected:
   void draw();
   void updateBorders();
 
+  void bezierPath(QPainterPath *path, QPoint p1, QPoint p2);
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
@@ -45,4 +49,12 @@ private:
   qreal requestedFramerate;
   int snappingDistance;
   Button menuButton;
+  Button xorButton;
+  QPoint mousePos;
+
+  bool creatingGate;
+  bool movingGate;
+  Gate *movedGate;
+
+  std::vector<Gate> logicGates;
 };

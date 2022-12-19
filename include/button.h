@@ -14,6 +14,7 @@ public:
   inline QString getButtonIdentifier() { return buttonIdentifier; }
   inline void setQPainter(QPainter *p) { painter = p; }
   inline QPainter *getQPainter() { return painter; }
+  inline void setPressed(bool b) { pressed = b; }
   bool buttonPressed(QPoint mousePos);
   void buttonHovering(QPoint mousePos);
 

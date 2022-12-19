@@ -7,9 +7,11 @@
 #include <qevent.h>
 #include <qglobal.h>
 #include <qnamespace.h>
+#include <qnumeric.h>
 #include <qpainter.h>
 #include <qpainterpath.h>
 #include <qpalette.h>
+#include <qpoint.h>
 #include <qtimer.h>
 #include <qtransform.h>
 #include <qwindowdefs.h>
@@ -28,6 +30,14 @@ MainWindow::MainWindow(QWidget *parent) {
   snappingDistance = 15;
 
   menuButton.setButtonIdentifier("MENU");
+  xorButton.setButtonIdentifier("XOR");
+
+  mousePos = QPoint(0, 0);
+
+  logicGates = {};
+  creatingGate = false;
+  movingGate = false;
+  movedGate = nullptr;
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {
@@ -47,8 +57,16 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 
 void MainWindow::draw() {
 
+  // initialize Painter
   if (menuButton.getQPainter() == nullptr) {
     menuButton.setQPainter(&painter);
+    xorButton.setQPainter(&painter);
+  }
+
+  for (int i = 0; i < logicGates.size(); i++) {
+    if (logicGates[i].getQPainter() == nullptr) {
+      logicGates[i].setQPainter(&painter);
+    }
   }
 
   // Lines
@@ -79,6 +97,32 @@ void MainWindow::draw() {
 
   // Buttons
   menuButton.draw();
+  xorButton.draw();
+
+  // Gates
+  for (int i = 0; i < logicGates.size(); i++) {
+    logicGates[i].draw(snappingDistance);
+  }
+
+  return;
+
+  painter.setPen(*colors.getColor("text"));
+  painter.setBrush(Qt::transparent);
+  painter.drawPath(path);
+}
+
+void bezierPath(QPainterPath *path, QPoint p1, QPoint p2) {
+  path = {};
+
+  // Calculate the control points for the curve
+  QLineF line(p1, p2);
+
+  QPointF controlPoint1(p1.x() + line.length() / 2, p1.y());
+  QPointF controlPoint2(p2.x() - line.length() / 2, p2.y());
+
+  // Create a QPainterPath and add a cubic Bezier curve to it
+  path->moveTo(p1);
+  path->cubicTo(controlPoint1, controlPoint2, p2);
 }
 
 void MainWindow::updateBorders() {
@@ -97,7 +141,30 @@ void MainWindow::updateBorders() {
 void MainWindow::mousePressEvent(QMouseEvent *event) {
   QMap<Qt::MouseButton, std::function<void()>> actions = {
       {Qt::LeftButton,
-       [&] { bool pressed = menuButton.buttonPressed(event->pos()); }},
+       [&] {
+         if (creatingGate) {
+           creatingGate = false;
+           return;
+         }
+         bool pressed = menuButton.buttonPressed(mousePos);
+         pressed = xorButton.buttonPressed(mousePos);
+         if (pressed) {
+           xorButton.setPressed(false);
+           Gate g;
+           g.setGateIdentifier("XOR");
+           g.setGatePos(QPointF(-100, -100));
+           logicGates.push_back(g);
+           creatingGate = true;
+         }
+         for (int i = 0; i < logicGates.size(); i++) {
+           Gate *g = &logicGates[i];
+           bool pressed = g->gatePressed(mousePos);
+           if (pressed) {
+             movingGate = true;
+             movedGate = g;
+           }
+         }
+       }},
       {Qt::MiddleButton, [&] { /* Middle Button pressed */ }},
       {Qt::RightButton, [&] { /* Right Button pressed */ }}};
 
@@ -108,7 +175,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
   QMap<Qt::MouseButton, std::function<void()>> actions = {
-      {Qt::LeftButton, [&] { /* Left Button released */ }},
+      {Qt::LeftButton,
+       [&] {
+         movingGate = false;
+         movedGate = nullptr;
+       }},
       {Qt::MiddleButton, [&] { /* Middle Button released */ }},
       {Qt::RightButton, [&] { /* Right Button released */ }}};
 
@@ -118,14 +189,22 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
+  mousePos = event->pos();
   // Move
-  menuButton.buttonHovering(event->pos());
+  menuButton.buttonHovering(mousePos);
+  xorButton.buttonHovering(mousePos);
+  if (creatingGate) {
+    logicGates[logicGates.size() - 1].setGatePos(mousePos);
+  } else if (movingGate) {
+    movedGate->setGatePos(mousePos);
+  }
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
   // Stuff
   updateBorders();
   menuButton.setButtonBounds(QRectF(5, this->height() - 35, 60, 30));
+  xorButton.setButtonBounds(QRectF(70, this->height() - 35, 50, 30));
 }
 
 void MainWindow::timerEvent() {
