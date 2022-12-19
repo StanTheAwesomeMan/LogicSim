@@ -81,11 +81,13 @@ QColor *Colors::getColor(const std::string &colorName) {
   colorMap["base"] = &base;
   colorMap["mantle"] = &mantle;
   colorMap["crust"] = &crust;
+  colorMap["accent"] = &accent;
+  colorMap["darkAccent"] = &darkAccent;
 
   if (colorMap.contains(colorName)) {
     return colorMap[colorName];
   }
-  return nullptr;
+  return &crust;
 }
 
 Colors colors;

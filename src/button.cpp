@@ -2,6 +2,7 @@
 #include <qcolor.h>
 #include <qnamespace.h>
 #include <qtextoption.h>
+#include <tuple>
 
 Button::Button() {
   baseColor = colors.getColor("base");
@@ -26,4 +27,11 @@ void Button::draw() {
   painter->setPen(c);
   painter->drawText(buttonBounds, buttonIdentifier,
                     QTextOption(Qt::AlignCenter));
+}
+
+bool Button::buttonPressed(QPoint mousePos) {
+  if (buttonBounds.contains(mousePos)) {
+    pressed = !pressed;
+  }
+  return pressed;
 }

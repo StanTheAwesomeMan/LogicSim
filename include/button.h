@@ -11,6 +11,7 @@ public:
   Button();
   inline void setButtonBounds(QRectF bounds) { buttonBounds = bounds; }
   inline void setButtonIdentifier(QString ident) { buttonIdentifier = ident; }
+  inline QString getButtonIdentifier() { return buttonIdentifier; }
   inline void setQPainter(QPainter *p) { painter = p; }
   inline QPainter *getQPainter() { return painter; }
   bool buttonPressed(QPoint mousePos);

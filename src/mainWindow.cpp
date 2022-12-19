@@ -14,6 +14,7 @@
 #include <qtransform.h>
 #include <qwindowdefs.h>
 #include <thread>
+#include <variant>
 #include <vector>
 
 MainWindow::MainWindow(QWidget *parent) {
@@ -95,9 +96,10 @@ void MainWindow::updateBorders() {
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
   QMap<Qt::MouseButton, std::function<void()>> actions = {
-      {Qt::LeftButton, [] { /* Left Button pressed */ }},
-      {Qt::MiddleButton, [] { /* Middle Button pressed */ }},
-      {Qt::RightButton, [] { /* Right Button pressed */ }}};
+      {Qt::LeftButton,
+       [&] { bool pressed = menuButton.buttonPressed(event->pos()); }},
+      {Qt::MiddleButton, [&] { /* Middle Button pressed */ }},
+      {Qt::RightButton, [&] { /* Right Button pressed */ }}};
 
   if (actions.contains(event->button())) {
     actions[event->button()]();
@@ -106,9 +108,9 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
   QMap<Qt::MouseButton, std::function<void()>> actions = {
-      {Qt::LeftButton, [] { /* Left Button released */ }},
-      {Qt::MiddleButton, [] { /* Middle Button released */ }},
-      {Qt::RightButton, [] { /* Right Button released */ }}};
+      {Qt::LeftButton, [&] { /* Left Button released */ }},
+      {Qt::MiddleButton, [&] { /* Middle Button released */ }},
+      {Qt::RightButton, [&] { /* Right Button released */ }}};
 
   if (actions.contains(event->button())) {
     actions[event->button()]();
