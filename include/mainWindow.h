@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QPaintEvent>
 #include <QPainter>
+#include <chrono>
 #include <qcoreevent.h>
 #include <qdatetime.h>
 #include <qevent.h>
@@ -43,6 +44,7 @@ protected:
   void timerEvent();
 
 private:
+  std::chrono::time_point<std::chrono::steady_clock> start;
   QPainter painter;
   std::vector<QRectF> borderBounds;
   std::vector<QRectF> lineBounds;
@@ -53,11 +55,12 @@ private:
   qreal requestedFramerate;
   int snappingDistance;
   Button menuButton;
-  Button xorButton;
+  Button gateButton;
   QPoint mousePos;
   QRectF mouseBounds;
   std::vector<std::tuple<QRectF *, QRectF *, bool *> *> connections{};
-  std::vector<QPainterPath *> wirePaths;
+  std::vector<QPainterPath> wirePaths;
   std::vector<Gate> logicGates;
   bool creatingConnection;
+  QPainterPath selectedWire;
 };

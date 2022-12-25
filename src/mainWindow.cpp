@@ -19,6 +19,7 @@
 #include <qsize.h>
 #include <qtimer.h>
 #include <qtransform.h>
+#include <qwidget.h>
 #include <qwindowdefs.h>
 #include <thread>
 #include <tuple>
@@ -39,9 +40,11 @@ MainWindow::MainWindow(QWidget *parent) {
   requestedFramerate = 165;
   snappingDistance = 15;
 
+  start = std::chrono::steady_clock::now();
+
   // Buttons
   menuButton.setButtonIdentifier("MENU");
-  xorButton.setButtonIdentifier("XOR");
+  gateButton.setButtonIdentifier("GATE");
 
   // Mouse position
   mousePos = QPoint(0, 0);
@@ -55,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) {
     g2.inputs.push_back(new bool(false));
   }
 
-  g3.setGateIdentifier("AND");
+  g3.setGateIdentifier("OR");
   for (int i = 0; i < 2; i++) {
     g3.inputs.push_back(new bool(false));
   }
@@ -88,7 +91,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 
   // initialize Painter
   menuButton.painter = &painter;
-  xorButton.painter = &painter;
+  gateButton.painter = &painter;
 
   // Gates
   for (Gate &g : logicGates) {
@@ -139,7 +142,7 @@ void MainWindow::draw() {
 
   // Buttons
   menuButton.draw();
-  xorButton.draw();
+  gateButton.draw();
 
   // Gates
   for (Gate &g : logicGates) {
@@ -180,13 +183,30 @@ void MainWindow::draw() {
     path.moveTo(p1);
     path.cubicTo(cp1, cp2, p2);
 
+    bool selected = false;
+
+    int tolerance = 5;
+
+    if (!selectedWire.isEmpty()) {
+      QRectF boundingRectA(selectedWire.currentPosition().x() - tolerance,
+                           selectedWire.currentPosition().y() - tolerance,
+                           tolerance, tolerance);
+      QRectF boundingRectB(selectedWire.elementAt(0).x - tolerance,
+                           selectedWire.elementAt(0).y - tolerance, tolerance,
+                           tolerance);
+
+      if (boundingRectA.contains(p2) && boundingRectB.contains(p1))
+        selected = true;
+    }
+
     // Wire Drawing
     painter.setBrush(Qt::transparent);
     QColor col =
         (s) ? *colors.getColor("accent") : *colors.getColor("darkAccent");
-    painter.setPen(QPen(col, 4));
+    painter.setPen(QPen(col.lighter((selected) ? ((s) ? 120 : 150) : 100),
+                        (selected) ? 5 : 4, Qt::SolidLine));
     painter.drawPath(path);
-    wirePaths.push_back(&path);
+    wirePaths.push_back(path);
   }
 
   for (Gate &g : logicGates) {
@@ -220,18 +240,20 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
       // Left mouse button
       if (menuButton.buttonPressed(mousePos)) {
         // Show menu
-        break;
+        gateButton.setPressed(false);
       }
-      if (xorButton.buttonPressed(mousePos)) {
-        xorButton.setPressed(false);
-        break;
+      if (gateButton.buttonPressed(mousePos)) {
+        // Show gate window
+        menuButton.setPressed(false);
       }
 
+      // Check for clicked Logic Gate pins
       for (Gate &g : logicGates) {
         c = g.getClickedPin(mousePos);
         type = std::get<0>(c);
         bounds = std::get<1>(c);
         input = std::get<2>(c);
+        // Switch individual pin types
         switch (type) {
         case 0:
           // Not clicked
@@ -243,7 +265,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                 bounds, &mouseBounds, &g.output));
             creatingConnection = true;
           }
-          break;
+          return;
         case 2:
           // Input Clicked
           if (creatingConnection) {
@@ -260,10 +282,26 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
               creatingConnection = false;
             }
           }
-          break;
+          return;
         case 3:
           // Right mouse button
           break;
+        }
+      }
+
+      // Wires
+      int tolerance = 10;
+      QRectF boundingRect(mousePos.x() - tolerance, mousePos.y() - tolerance,
+                          tolerance * 2, tolerance * 2);
+
+      if (!selectedWire.isEmpty())
+        selectedWire.clear();
+      for (QPainterPath &p : wirePaths) {
+        if (p.intersects(boundingRect)) {
+          if (!selectedWire.isEmpty())
+            selectedWire.clear();
+          else
+            selectedWire = p;
         }
       }
     }
@@ -297,7 +335,45 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
   // Handle delete key (backspace)
   if (event->key() == Qt::Key_Backspace) {
-    // Do something when the delete key is pressed
+    // Cancelling Connections
+    if (creatingConnection) {
+      creatingConnection = false;
+      connections.pop_back();
+
+      // Deleting Wires
+    } else if (!selectedWire.isEmpty()) {
+      int index = -1;
+      for (int i = 0; i < connections.size(); ++i) {
+        QRectF *startRect = std::get<0>(*connections[i]);
+        QRectF *endRect = std::get<1>(*connections[i]);
+        if (startRect->contains(selectedWire.elementAt(0)) &
+            endRect->contains(selectedWire.currentPosition())) {
+          // Connection found
+          index = i;
+          int inputIndex = -1;
+          for (int j = 0; j < logicGates.size(); ++j) {
+            for (int k = 0; k < logicGates[j].inputBounds.size(); ++k) {
+              QRectF inputBounds = logicGates[j].inputBounds[k];
+              if (endRect->contains(inputBounds)) {
+                // Input found
+                inputIndex = k;
+                break;
+              }
+            }
+            if (inputIndex >= 0) {
+              // Update input value
+              logicGates[j].inputs[inputIndex] = new bool(false);
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (index > -1) {
+        connections.erase(connections.begin() + index);
+      }
+      selectedWire.clear();
+    }
   }
 
   // Handle up arrow key
@@ -315,14 +391,14 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
   mousePos = event->pos();
   mouseBounds = QRectF(mousePos, QSize(1, 1));
   menuButton.buttonHovering(mousePos);
-  xorButton.buttonHovering(mousePos);
+  gateButton.buttonHovering(mousePos);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
   // Stuff
   updateBorders();
   menuButton.setButtonBounds(QRectF(5, height() - 35, 60, 30));
-  xorButton.setButtonBounds(QRectF(70, height() - 35, 50, 30));
+  gateButton.setButtonBounds(QRectF(70, height() - 35, 55, 30));
 }
 
 void MainWindow::timerEvent() {
