@@ -49,9 +49,9 @@ void Colors::cycleAccent() {
                                 maroon,   peach,    yellow, green, teal,
                                 sky,      sapphire, blue};
 
+  accentIndex = (int)((accentIndex + 1) % accentColors.size());
   accent = accentColors[accentIndex];
   darkAccent = accent.darker(250);
-  accentIndex = (int)((accentIndex + 1) % accentColors.size());
 }
 
 QColor *Colors::getColor(const std::string &colorName) {

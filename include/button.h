@@ -12,13 +12,12 @@ public:
   inline void setButtonBounds(QRectF bounds) { buttonBounds = bounds; }
   inline void setButtonIdentifier(QString ident) { buttonIdentifier = ident; }
   inline QString getButtonIdentifier() { return buttonIdentifier; }
-  inline void setQPainter(QPainter *p) { painter = p; }
-  inline QPainter *getQPainter() { return painter; }
   inline void setPressed(bool b) { pressed = b; }
   bool buttonPressed(QPoint mousePos);
   void buttonHovering(QPoint mousePos);
 
   void draw();
+  QPainter *painter;
 
 protected:
 private:
@@ -26,7 +25,6 @@ private:
   bool hovering;
   QRectF buttonBounds;
   QString buttonIdentifier;
-  QPainter *painter;
   QColor *baseColor;
   QColor *hoverColor;
   QColor *pressedColor;
