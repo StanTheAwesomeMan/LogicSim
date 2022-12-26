@@ -39,6 +39,7 @@ protected:
   void updateBorders();
   void keepConnectionsIntact();
   void handleButtonBar();
+  void deleteWire(std::pair<QRectF, QRectF> a);
 
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
