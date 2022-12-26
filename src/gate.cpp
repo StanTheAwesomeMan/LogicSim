@@ -11,11 +11,16 @@
 
 Gate::Gate() {}
 
-void Gate::draw() {
+void Gate::draw(bool selected = false) {
 
-  painter->setPen(Qt::transparent);
+  painter->setPen(
+      QPen((selected) ? *colors.getColor("text") : Qt::transparent, 2));
   painter->setBrush(*colors.getColor("accent"));
   painter->drawRoundedRect(gateBounds, 5, 5);
+
+  // Gate bounds
+  gateBounds =
+      QRectF(gatePos, QSizeF(45, std::max(15 * (int)inputs.size(), 30)));
 
   for (int i = 0; i < inputs.size(); i++) {
     if (!inputs.empty()) {
@@ -74,4 +79,10 @@ std::tuple<int, QRectF *, int> Gate::getClickedPin(QPoint mousePos) {
       return std::make_tuple(2, &inputBounds[i], i);
   }
   return std::make_tuple(0, nullptr, -1);
+}
+
+bool Gate::gateClicked(QPoint mousePos) {
+  if (gateBounds.contains(mousePos))
+    return true;
+  return false;
 }

@@ -13,6 +13,7 @@ public:
   inline void setButtonIdentifier(QString ident) { buttonIdentifier = ident; }
   inline QString getButtonIdentifier() { return buttonIdentifier; }
   inline void setPressed(bool b) { pressed = b; }
+  inline bool isPressed() { return pressed; };
   bool buttonPressed(QPoint mousePos);
   void buttonHovering(QPoint mousePos);
 

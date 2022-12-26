@@ -3,6 +3,9 @@
 #include "button.h"
 #include "colors.h"
 #include "gate.h"
+#include "gateMenu.h"
+#include "inputsMenu.h"
+#include "toggle.h"
 #include <QMainWindow>
 #include <QPaintEvent>
 #include <QPainter>
@@ -34,6 +37,7 @@ public:
 protected:
   void draw();
   void updateBorders();
+  void keepConnectionsIntact();
 
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
@@ -53,14 +57,24 @@ private:
   qreal frametime;
   qreal framerate;
   qreal requestedFramerate;
+  __int128 framecount;
   int snappingDistance;
   Button menuButton;
   Button gateButton;
+  Button inputsButton;
+  GMenu gateMenu;
+  IMenu inputsMenu;
   QPoint mousePos;
   QRectF mouseBounds;
-  std::vector<std::tuple<QRectF *, QRectF *, bool *> *> connections{};
+  std::vector<std::tuple<std::pair<QRectF *, int>, QRectF *, bool *> *>
+      connections{};
   std::vector<QPainterPath> wirePaths;
   std::vector<Gate> logicGates;
+  std::vector<Toggle> toggles;
   bool creatingConnection;
   QPainterPath selectedWire;
+  Gate *movedGate;
+  Gate *selectedGate;
+  Toggle *movedToggle;
+  Toggle *selectedToggle;
 };
