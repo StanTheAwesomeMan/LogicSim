@@ -3,8 +3,8 @@
 #include "button.h"
 #include "colors.h"
 #include "gate.h"
-#include "gateMenu.h"
-#include "inputsMenu.h"
+#include "menu.h"
+#include "settings.h"
 #include "toggle.h"
 #include <QMainWindow>
 #include <QPaintEvent>
@@ -38,6 +38,7 @@ protected:
   void draw();
   void updateBorders();
   void keepConnectionsIntact();
+  void handleButtonBar();
 
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
@@ -62,19 +63,20 @@ private:
   Button menuButton;
   Button gateButton;
   Button inputsButton;
-  GMenu gateMenu;
-  IMenu inputsMenu;
   QPoint mousePos;
+  Settings settings;
   QRectF mouseBounds;
   std::vector<std::tuple<std::pair<QRectF *, int>, QRectF *, bool *> *>
       connections{};
   std::vector<QPainterPath> wirePaths;
   std::vector<Gate> logicGates;
   std::vector<Toggle> toggles;
+  std::vector<Menu> menus;
   bool creatingConnection;
   QPainterPath selectedWire;
   Gate *movedGate;
   Gate *selectedGate;
   Toggle *movedToggle;
   Toggle *selectedToggle;
+  bool draggingSettings;
 };

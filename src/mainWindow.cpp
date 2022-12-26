@@ -56,6 +56,47 @@ MainWindow::MainWindow(QWidget *parent) {
   // Moved gatge
   movedGate = nullptr;
   movedToggle = nullptr;
+
+  // settings
+  settings.setPos(QPointF(1920 / 2.0, 1080 / 2.0));
+  draggingSettings = false;
+
+  // more buttons
+  Menu m;
+  Button b1;
+  Button b2;
+  Button b3;
+  Button b4;
+
+  // Menu button
+  m.setType("MENU");
+  b1.setButtonIdentifier("SETTINGS");
+  b2.setButtonIdentifier("QUIT");
+  m.buttons.push_back(b1);
+  m.buttons.push_back(b2);
+  menus.push_back(m);
+
+  m = {};
+  // Gate button
+  m.setType("GATES");
+  b1.setButtonIdentifier("OR");
+  b2.setButtonIdentifier("AND");
+  b3.setButtonIdentifier("NOT");
+  b4.setButtonIdentifier("XOR");
+  m.buttons.push_back(b1);
+  m.buttons.push_back(b2);
+  m.buttons.push_back(b3);
+  m.buttons.push_back(b4);
+  menus.push_back(m);
+
+  m = {};
+  // Inputs button
+  m.setType("INPUTS");
+  b1.setButtonIdentifier("TOGGLE");
+  b2.setButtonIdentifier("CLOCK");
+  m.buttons.push_back(b1);
+  m.buttons.push_back(b2);
+  menus.push_back(m);
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {
@@ -70,14 +111,20 @@ void MainWindow::paintEvent(QPaintEvent *event) {
   menuButton.painter = &painter;
   gateButton.painter = &painter;
   inputsButton.painter = &painter;
-  gateMenu.painter = &painter;
-  inputsMenu.painter = &painter;
-  gateMenu.orButton.painter = &painter;
-  gateMenu.andButton.painter = &painter;
-  gateMenu.notButton.painter = &painter;
-  gateMenu.xorButton.painter = &painter;
-  inputsMenu.toggleButton.painter = &painter;
-  inputsMenu.clockButton.painter = &painter;
+  settings.painter = &painter;
+
+  // Settings
+  for (Button &b : settings.buttons) {
+    b.painter = &painter;
+  }
+
+  // Menus
+  for (Menu &m : menus) {
+    m.painter = &painter;
+    for (Button &b : m.buttons) {
+      b.painter = &painter;
+    }
+  }
 
   // Gates
   for (Gate &g : logicGates) {
@@ -121,26 +168,6 @@ void MainWindow::draw() {
 
   // Borders
   QPainterPath path{};
-  painter.setBrush(*colors.getColor("surface0"));
-  painter.setPen(Qt::transparent);
-
-  path.setFillRule(Qt::WindingFill);
-  for (QRectF borderRect : borderBounds) {
-    path.addRect(borderRect);
-  }
-  painter.drawPath(path);
-
-  // ButtonBar
-  painter.setBrush(*colors.getColor("mantle"));
-  painter.drawRect(0, this->height() - 40, this->width(), 40);
-
-  // Buttons
-  menuButton.draw();
-  gateButton.draw();
-  inputsButton.draw();
-
-  gateMenu.draw();
-  inputsMenu.draw();
 
   // Gates
   for (Gate &g : logicGates) {
@@ -165,7 +192,7 @@ void MainWindow::draw() {
     QPoint p2(c2x, c2y);
 
     // Calculate the maximum distance between p1 and p2
-    int max_distance = std::max(abs(p2.x() - p1.x()), 50);
+    int max_distance = std::max(abs(p2.x() - p1.x()), 75);
 
     // Calculate the control point for p1
     int cp1x = p1.x() + max_distance - 5;
@@ -215,6 +242,33 @@ void MainWindow::draw() {
   for (Toggle &t : toggles) {
     t.draw((&t == selectedToggle), framecount);
   }
+
+  // borders
+  painter.setBrush(*colors.getColor("surface0"));
+  painter.setPen(Qt::transparent);
+
+  path = {};
+  path.setFillRule(Qt::WindingFill);
+  for (QRectF borderRect : borderBounds) {
+    path.addRect(borderRect);
+  }
+  painter.drawPath(path);
+
+  // ButtonBar
+  painter.setBrush(*colors.getColor("mantle"));
+  painter.drawRect(0, this->height() - 40, this->width(), 40);
+
+  // Buttons
+  menuButton.draw();
+  gateButton.draw();
+  inputsButton.draw();
+
+  for (Menu &m : menus) {
+    m.draw(size());
+  }
+
+  // settings
+  settings.draw(size());
 }
 
 void MainWindow::updateBorders() {
@@ -242,6 +296,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
     int tolerance = 10;
     QRectF boundingRect;
     Button *b;
+    QString menuType;
     Gate ng;
     bool clicked = false;
     QMap<QString, int> inputCount = {
@@ -255,30 +310,37 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
     switch (actions[event->button()]) {
     case 1:
       // Left mouse button
-      gateMenu.setVisible(false);
-      inputsMenu.setVisible(false);
-      if (menuButton.buttonPressed(mousePos)) {
-        // Show menu
-        menuButton.setPressed(true);
-        inputsMenu.setVisible(false);
-        gateButton.setPressed(false);
-        inputsButton.setPressed(false);
-      }
-      if (gateButton.buttonPressed(mousePos)) {
-        // Show gate window
-        gateButton.setPressed(true);
-        gateMenu.setVisible(true);
-        menuButton.setPressed(false);
-        inputsMenu.setVisible(false);
-        inputsButton.setPressed(false);
-      }
-      if (inputsButton.buttonPressed(mousePos)) {
-        // Show inputs window
-        inputsButton.setPressed(true);
-        inputsMenu.setVisible(true);
-        menuButton.setPressed(false);
-        gateButton.setPressed(false);
-        gateMenu.setVisible(false);
+      handleButtonBar();
+
+      // Settings titlebar
+      if (settings.titleBarPressed(mousePos))
+        draggingSettings = true;
+
+      // Settings buttons
+      b = settings.buttonPressed(mousePos);
+      if (b != nullptr) {
+        if (b->getButtonIdentifier() == "X") {
+          b->setPressed(false);
+          for (Menu &m : menus) {
+            for (Button &bt : m.buttons) {
+              if (bt.getButtonIdentifier() == "SETTINGS") {
+                bt.setPressed(false);
+                break;
+              }
+            }
+          }
+        } else if (b->getButtonIdentifier() == "ACCENT") {
+          b->setPressed(false);
+          colors.cycleAccent();
+        } else if (b->getButtonIdentifier() == "RESET CLOCKS") {
+          b->setPressed(false);
+          for (Toggle &t : toggles) {
+            if (t.getToggleMode() == "CLOCK") {
+              t.output = false;
+            }
+          }
+        }
+        b = nullptr;
       }
 
       // Check for clicked logic Gate
@@ -324,42 +386,59 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         movedToggle = nullptr;
       }
 
-      // More button shenanigans
-      b = gateMenu.buttonPressed(mousePos);
-      if (b != nullptr) {
-        b->setPressed(false); // Add or gate
-        ng.setGateIdentifier(b->getButtonIdentifier());
-        for (int i = 0; i < inputCount[b->getButtonIdentifier()]; i++) {
-          ng.inputs.push_back(new bool(false));
-        }
-        ng.setGatePos(QPointF(mousePos.x() - 45 / 2.0, mousePos.y() - 15));
-        logicGates.push_back(ng);
-        movedGate = &logicGates.back();
-        selectedGate = movedGate;
+      for (Menu &m : menus) {
         b = nullptr;
-      }
+        menuType = m.getType();
+        b = m.buttonPressed(mousePos);
 
-      // Input button pain
-      b = inputsMenu.buttonPressed(mousePos);
-      if (b != nullptr) {
-        b->setPressed(false);
-        if (b->getButtonIdentifier() == "TOGGLE") {
-          // create toggle
-          Toggle tg;
-          tg.setToggleMode("MANUAL");
-          tg.setPos(mousePos);
-          toggles.push_back(tg);
-          movedToggle = &toggles.back();
-          selectedToggle = movedToggle;
-        } else if (b->getButtonIdentifier() == "CLOCK") {
-          // create toggle
-          Toggle tg;
-          tg.setToggleMode("CLOCK");
-          tg.period = 165 / 2;
-          tg.setPos(mousePos);
-          toggles.push_back(tg);
-          movedToggle = &toggles.back();
-          selectedToggle = movedToggle;
+        //  Button shenanigans
+        if (menuType == "MENU") {
+          settings.setVisible(false);
+          if (b != nullptr && b->getButtonIdentifier() == "SETTINGS") {
+            settings.setVisible(true);
+            b = nullptr;
+          } else if (b != nullptr && b->getButtonIdentifier() == "QUIT") {
+            b = nullptr;
+            // add confirmation
+            exit(0);
+          }
+        }
+
+        // More button shenanigans
+        if (b != nullptr && menuType == "GATES") {
+          b->setPressed(false); // Add or gate
+          ng.setGateIdentifier(b->getButtonIdentifier());
+          for (int i = 0; i < inputCount[b->getButtonIdentifier()]; i++) {
+            ng.inputs.push_back(new bool(false));
+          }
+          ng.setGatePos(QPointF(mousePos.x() - 45 / 2.0, mousePos.y() - 15));
+          logicGates.push_back(ng);
+          movedGate = &logicGates.back();
+          selectedGate = movedGate;
+          b = nullptr;
+        }
+
+        // Input button pain
+        if (b != nullptr && menuType == "INPUTS") {
+          b->setPressed(false);
+          if (b->getButtonIdentifier() == "TOGGLE") {
+            // create toggle
+            Toggle tg;
+            tg.setToggleMode("MANUAL");
+            tg.setPos(mousePos);
+            toggles.push_back(tg);
+            movedToggle = &toggles.back();
+            selectedToggle = movedToggle;
+          } else if (b->getButtonIdentifier() == "CLOCK") {
+            // create toggle
+            Toggle tg;
+            tg.setToggleMode("CLOCK");
+            tg.period = 165 / 2;
+            tg.setPos(mousePos);
+            toggles.push_back(tg);
+            movedToggle = &toggles.back();
+            selectedToggle = movedToggle;
+          }
         }
       }
 
@@ -455,6 +534,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
         movedGate = nullptr;
       if (selectedToggle != nullptr && movedToggle != nullptr)
         movedToggle = nullptr;
+      draggingSettings = false;
       break;
     case 2:
       // Middle mouse button
@@ -494,7 +574,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           for (int j = 0; j < logicGates.size(); ++j) {
             for (int k = 0; k < logicGates[j].inputBounds.size(); ++k) {
               QRectF inputBounds = logicGates[j].inputBounds[k];
-              if (endRect->contains(inputBounds)) {
+              if (endRect->contains(inputBounds.center())) {
                 // Input found
                 inputIndex = k;
                 break;
@@ -520,7 +600,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
       // Delete connections
       for (int i = 0; i < connections.size(); i++) {
         QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
-        if (startRect->contains(selectedToggle->outputBounds)) {
+        if (startRect->contains(selectedToggle->outputBounds.center())) {
           // Connection found
           QRectF *endRect = std::get<1>(*connections[i]);
           connections.erase(connections.begin() + i);
@@ -529,7 +609,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           for (int j = 0; j < logicGates.size(); j++) {
             for (int k = 0; k < logicGates[j].inputBounds.size(); k++) {
               QRectF inputBounds = logicGates[j].inputBounds[k];
-              if (endRect->contains(inputBounds)) {
+              if (endRect->contains(inputBounds.center())) {
                 // Input found
                 logicGates[j].inputs[k] = new bool(false);
                 continue;
@@ -554,7 +634,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
       // Delete connections with selected gate as start point
       for (int i = 0; i < connections.size(); i++) {
         QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
-        if (startRect->contains(selectedGate->outputBounds)) {
+        if (startRect->contains(selectedGate->outputBounds.center())) {
           // Connection found
           QRectF *endRect = std::get<1>(*connections[i]);
           connections.erase(connections.begin() + i);
@@ -563,7 +643,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           for (int j = 0; j < logicGates.size(); j++) {
             for (int k = 0; k < logicGates[j].inputBounds.size(); k++) {
               QRectF inputBounds = logicGates[j].inputBounds[k];
-              if (endRect->contains(inputBounds)) {
+              if (endRect->contains(inputBounds.center())) {
                 // Input found
                 logicGates[j].inputs[k] = new bool(false);
                 continue;
@@ -576,7 +656,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
       for (int i = 0; i < connections.size(); i++) {
         QRectF *endRect = std::get<1>(*connections[i]);
         for (int h = 0; h < selectedGate->inputBounds.size(); h++) {
-          if (endRect->contains(selectedGate->inputBounds[h])) {
+          if (endRect->contains(selectedGate->inputBounds[h].center())) {
             // Connection found
             connections.erase(connections.begin() + i);
             i--;
@@ -606,13 +686,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           QRectF *endRect = std::get<1>(*connections[i]);
           for (int z = 0; z < selectedGate->inputBounds.size(); z++) {
             QRectF inputBounds = selectedGate->inputBounds[z];
-            if (endRect->contains(inputBounds)) {
+            if (endRect->contains(inputBounds.center())) {
               x = std::get<1>(std::get<0>(*connections[i]));
               y = i;
               f.emplace_back(x, y);
             }
           }
-          if (startRect->contains(selectedGate->outputBounds)) {
+          if (startRect->contains(selectedGate->outputBounds.center())) {
             z = i;
           }
         }
@@ -641,7 +721,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           QRectF *endRect = std::get<1>(*connections[i]);
           QRectF inputBounds =
               selectedGate->inputBounds[selectedGate->inputs.size() - 1];
-          if (endRect->contains(inputBounds)) {
+          if (endRect->contains(inputBounds.center())) {
             connections.erase(connections.begin() + i);
           }
         }
@@ -661,8 +741,17 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
   menuButton.buttonHovering(mousePos);
   gateButton.buttonHovering(mousePos);
   inputsButton.buttonHovering(mousePos);
-  gateMenu.buttonHovering(mousePos);
-  inputsMenu.buttonHovering(mousePos);
+  settings.buttonHovering(mousePos);
+
+  if (draggingSettings) {
+    QSizeF s = settings.getSize();
+    QPointF p(mousePos.x(), mousePos.y() + s.height() / 2 - 15);
+    settings.setPos(p);
+  }
+
+  for (Menu &m : menus) {
+    m.buttonHovering(mousePos);
+  }
 
   if (movedGate != nullptr) {
     QSizeF gateSize = movedGate->getGateSize();
@@ -683,8 +772,6 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
   menuButton.setButtonBounds(QRectF(5, height() - 35, 60, 30));
   gateButton.setButtonBounds(QRectF(70, height() - 35, 55, 30));
   inputsButton.setButtonBounds(QRectF(130, height() - 35, 65, 30));
-  gateMenu.setPos(QPointF(15, height() - 220));
-  inputsMenu.setPos(QPointF(15, height() - 140));
 }
 
 void MainWindow::timerEvent() {
@@ -723,13 +810,13 @@ void MainWindow::keepConnectionsIntact() {
       QRectF *endRect = std::get<1>(*connections[i]);
       for (int z = 0; z < g.inputBounds.size(); z++) {
         QRectF inputBounds = g.inputBounds[z];
-        if (endRect->contains(inputBounds)) {
+        if (endRect->contains(inputBounds.center())) {
           x = std::get<1>(std::get<0>(*connections[i]));
           y = i;
           d.emplace_back(x, y);
         }
       }
-      if (startRect->contains(g.outputBounds)) {
+      if (startRect->contains(g.outputBounds.center())) {
         f = i;
       }
     }
@@ -755,5 +842,48 @@ void MainWindow::keepConnectionsIntact() {
       std::get<0>(std::get<0>(*connections[f])) = &t.outputBounds;
       std::get<2>(*connections[f]) = &t.output;
     }
+  }
+}
+
+void MainWindow::handleButtonBar() {
+
+  Menu *gateMenu, *inputsMenu, *mainMenu;
+
+  for (Menu &m : menus) {
+    if (m.getType() == "MENU")
+      mainMenu = &m;
+    if (m.getType() == "GATES")
+      gateMenu = &m;
+    if (m.getType() == "INPUTS")
+      inputsMenu = &m;
+  }
+
+  gateMenu->setVisible(false);
+  inputsMenu->setVisible(false);
+  mainMenu->setVisible(false);
+  if (menuButton.buttonPressed(mousePos)) {
+    // Show menu
+    gateMenu->setVisible(false);
+    inputsMenu->setVisible(false);
+    mainMenu->setVisible(true);
+    gateButton.setPressed(false);
+    inputsButton.setPressed(false);
+  }
+  if (gateButton.buttonPressed(mousePos)) {
+    // Show gate window
+    mainMenu->setVisible(false);
+    inputsMenu->setVisible(false);
+    gateMenu->setVisible(true);
+    menuButton.setPressed(false);
+    inputsButton.setPressed(false);
+  }
+  if (inputsButton.buttonPressed(mousePos)) {
+    // Show inputs window
+    mainMenu->setVisible(false);
+    gateMenu->setVisible(false);
+    inputsMenu->setVisible(true);
+    menuButton.setPressed(false);
+    gateButton.setPressed(false);
+    gateMenu->setVisible(false);
   }
 }

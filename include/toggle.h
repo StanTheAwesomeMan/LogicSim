@@ -17,6 +17,7 @@ public:
   inline void setPos(QPointF p) { togglePos = std::move(p); }
   inline QSizeF getToggleSize() { return toggleBounds.size(); }
   inline void setToggleMode(QString s) { toggleMode = std::move(s); };
+  inline QString getToggleMode() { return toggleMode; }
 
   QPainter *painter;
   bool output{};

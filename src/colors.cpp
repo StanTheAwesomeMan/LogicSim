@@ -31,7 +31,7 @@ Colors::Colors() {
   mantle = QColor::fromRgb(24, 24, 37);
   crust = QColor::fromRgb(17, 17, 27);
 
-  accent = blue;
+  accent = mauve;
   darkAccent = accent.darker(200);
 }
 

@@ -19,6 +19,12 @@ public:
 
   void draw();
   QPainter *painter;
+  QColor *baseColor;
+  QColor *hoverColor;
+  QColor *pressedColor;
+  QColor *baseTextColor;
+  QColor *hoverTextColor;
+  QColor *pressedTextColor;
 
 protected:
 private:
@@ -26,10 +32,4 @@ private:
   bool hovering;
   QRectF buttonBounds;
   QString buttonIdentifier;
-  QColor *baseColor;
-  QColor *hoverColor;
-  QColor *pressedColor;
-  QColor *baseTextColor;
-  QColor *hoverTextColor;
-  QColor *pressedTextColor;
 };
