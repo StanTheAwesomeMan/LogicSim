@@ -127,13 +127,17 @@ void MainWindow::paintEvent(QPaintEvent *event) {
   }
 
   // Gates
-  for (Gate &g : logicGates) {
-    g.painter = &painter;
+  for (Gate *g : logicGates) {
+    if (g == nullptr)
+      continue;
+    g->painter = &painter;
   }
 
   // Toggles
-  for (Toggle &t : toggles) {
-    t.painter = &painter;
+  for (Toggle *t : toggles) {
+    if (t == nullptr)
+      continue;
+    t->painter = &painter;
   }
 
   // Draw
@@ -170,8 +174,10 @@ void MainWindow::draw() {
 
   // Gates
   keepConnectionsIntact();
-  for (Gate &g : logicGates) {
-    g.update();
+  for (Gate *g : logicGates) {
+    if (g == nullptr)
+      continue;
+    g->update();
   }
   keepConnectionsIntact();
 
@@ -235,13 +241,17 @@ void MainWindow::draw() {
     wirePaths.emplace_back(path);
   }
 
-  for (Gate &g : logicGates) {
-    g.draw((&g == selectedGate));
+  for (Gate *g : logicGates) {
+    if (g == nullptr)
+      continue;
+    g->draw((*&g == selectedGate));
   }
 
   // Toggles
-  for (Toggle &t : toggles) {
-    t.draw((&t == selectedToggle), framecount);
+  for (Toggle *t : toggles) {
+    if (t == nullptr)
+      continue;
+    t->draw((*&t == selectedToggle), framecount);
   }
 
   // borders
@@ -298,7 +308,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
     QRectF boundingRect;
     Button *b;
     QString menuType;
-    Gate ng;
+    Gate *ng = new Gate;
     bool clicked = false;
     QMap<QString, int> inputCount = {
         {"OR", 2},
@@ -335,9 +345,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
           colors.cycleAccent();
         } else if (b->getButtonIdentifier() == "RESET CLOCKS") {
           b->setPressed(false);
-          for (Toggle &t : toggles) {
-            if (t.getToggleMode() == "CLOCK") {
-              t.output = false;
+          for (Toggle *t : toggles) {
+            if (t == nullptr)
+              continue;
+            if (t->getToggleMode() == "CLOCK") {
+              t->output = false;
             }
           }
         }
@@ -346,13 +358,15 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 
       // Check for clicked logic Gate
       clicked = false;
-      for (Gate &g : logicGates) {
-        if (g.gateClicked(mousePos)) {
+      for (Gate *g : logicGates) {
+        if (g == nullptr)
+          continue;
+        if (g->gateClicked(mousePos)) {
           clicked = true;
-          if (selectedGate == &g && movedGate == nullptr) {
-            movedGate = &g;
+          if (selectedGate == g && movedGate == nullptr) {
+            movedGate = g;
           } else if (selectedGate == nullptr && movedGate == nullptr) {
-            selectedGate = &g;
+            selectedGate = g;
           } else {
             clicked = false;
           }
@@ -365,16 +379,18 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         movedGate = nullptr;
       }
 
-      for (Toggle &t : toggles) {
-        t.toggleAreaClicked(mousePos);
+      for (Toggle *t : toggles) {
+        if (t == nullptr)
+          continue;
+        t->toggleAreaClicked(mousePos);
         // check for clicked Toggle body
         clicked = false;
-        if (t.bodyClicked(mousePos)) {
+        if (t->bodyClicked(mousePos)) {
           clicked = true;
-          if (selectedToggle == &t && movedToggle == nullptr) {
-            movedToggle = &t;
+          if (selectedToggle == t && movedToggle == nullptr) {
+            movedToggle = t;
           } else if (selectedToggle == nullptr && movedToggle == nullptr) {
-            selectedToggle = &t;
+            selectedToggle = t;
           } else {
             clicked = false;
           }
@@ -408,13 +424,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         // More button shenanigans
         if (b != nullptr && menuType == "GATES") {
           b->setPressed(false); // Add or gate
-          ng.setGateIdentifier(b->getButtonIdentifier());
+          ng->setGateIdentifier(b->getButtonIdentifier());
           for (int i = 0; i < inputCount[b->getButtonIdentifier()]; i++) {
-            ng.inputs.emplace_back(new bool(false));
+            ng->inputs.emplace_back(new bool(false));
           }
-          ng.setGatePos(QPointF(mousePos.x() - 45 / 2.0, mousePos.y() - 15));
+          ng->setGatePos(QPointF(mousePos.x() - 45 / 2.0, mousePos.y() - 15));
           logicGates.emplace_back(ng);
-          movedGate = &logicGates.back();
+          movedGate = logicGates.back();
           selectedGate = movedGate;
           b = nullptr;
 
@@ -427,22 +443,22 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
           b->setPressed(false);
           if (b->getButtonIdentifier() == "TOGGLE") {
             // create toggle
-            Toggle tg;
-            tg.setToggleMode("MANUAL");
-            tg.setPos(mousePos);
+            Toggle *tg = new Toggle;
+            tg->setToggleMode("MANUAL");
+            tg->setPos(mousePos);
             toggles.emplace_back(tg);
-            movedToggle = &toggles.back();
+            movedToggle = toggles.back();
             selectedToggle = movedToggle;
             // Keep wires functioning
             keepConnectionsIntact();
           } else if (b->getButtonIdentifier() == "CLOCK") {
             // create toggle
-            Toggle tg;
-            tg.setToggleMode("CLOCK");
-            tg.period = 165 / 2;
-            tg.setPos(mousePos);
+            Toggle *tg = new Toggle;
+            tg->setToggleMode("CLOCK");
+            tg->period = 165 / 2;
+            tg->setPos(mousePos);
             toggles.emplace_back(tg);
-            movedToggle = &toggles.back();
+            movedToggle = toggles.back();
             selectedToggle = movedToggle;
             // Keep wires functioning
             keepConnectionsIntact();
@@ -450,14 +466,16 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         }
       }
 
-      for (Toggle &t : toggles) {
+      for (Toggle *t : toggles) {
+        if (t == nullptr)
+          continue;
         // Check for clicked Toggle output
-        if (t.outputClicked(mousePos) != nullptr) {
+        if (t->outputClicked(mousePos) != nullptr) {
           if (!creatingConnection) {
             connections.emplace_back(
                 new std::tuple<std::pair<QRectF *, int>, QRectF *, bool *>(
-                    std::make_pair(t.outputClicked(mousePos), -1), &mouseBounds,
-                    &t.output));
+                    std::make_pair(t->outputClicked(mousePos), -1),
+                    &mouseBounds, &t->output));
             creatingConnection = true;
           }
           return;
@@ -465,8 +483,10 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
       }
 
       // Check for clicked Logic Gate pins
-      for (Gate &g : logicGates) {
-        c = g.getClickedPin(mousePos);
+      for (Gate *g : logicGates) {
+        if (g == nullptr)
+          continue;
+        c = g->getClickedPin(mousePos);
         type = std::get<0>(c);
         bounds = std::get<1>(c);
         input = std::get<2>(c);
@@ -480,7 +500,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
           if (!creatingConnection) {
             connections.emplace_back(
                 new std::tuple<std::pair<QRectF *, int>, QRectF *, bool *>(
-                    std::make_pair(bounds, input), &mouseBounds, &g.output));
+                    std::make_pair(bounds, input), &mouseBounds, &g->output));
             creatingConnection = true;
           }
           return;
@@ -497,7 +517,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
             if (!connectionExists) {
               std::get<1>(*connections.back()) = bounds;
               std::get<1>(std::get<0>(*connections.back())) = input;
-              g.inputs[input] = std::get<2>(*connections.back());
+              g->inputs[input] = std::get<2>(*connections.back());
               creatingConnection = false;
             }
           }
@@ -582,8 +602,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           index = i;
           int inputIndex = -1;
           for (int j = 0; j < logicGates.size(); ++j) {
-            for (int k = 0; k < logicGates[j].inputBounds.size(); ++k) {
-              QRectF inputBounds = logicGates[j].inputBounds[k];
+            for (int k = 0; k < logicGates[j]->inputBounds.size(); ++k) {
+              QRectF inputBounds = logicGates[j]->inputBounds[k];
               if (endRect->contains(inputBounds.center())) {
                 // Input found
                 inputIndex = k;
@@ -592,7 +612,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
             }
             if (inputIndex >= 0) {
               // Update input value
-              logicGates[j].inputs[inputIndex] = new bool(false);
+              logicGates[j]->inputs[inputIndex] = new bool(false);
               break;
             }
           }
@@ -600,7 +620,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
         }
       }
       if (index > -1) {
-        connections.erase(connections.begin() + index);
+        connections[index] = nullptr;
       }
       selectedWire.clear();
     }
@@ -608,13 +628,82 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     // Handle toggle deletion
     if (selectedToggle != nullptr && movedToggle == nullptr) {
       // Delete connections
+      for (int i = 0; i < connections.size(); i++) {
+        QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
+        if (startRect->contains(selectedToggle->outputBounds.center())) {
+          // Connection found
+          QRectF *endRect = std::get<1>(*connections[i]);
+          connections[i] = nullptr;
+          i--;
+          // Update input of the gate connected to the end point
+          for (int j = 0; j < logicGates.size(); j++) {
+            for (int k = 0; k < logicGates[j]->inputBounds.size(); k++) {
+              QRectF inputBounds = logicGates[j]->inputBounds[k];
+              if (endRect->contains(inputBounds.center())) {
+                // Input found
+                logicGates[j]->inputs[k] = new bool(false);
+                continue;
+              }
+            }
+          }
+        }
+      }
+      if (selectedToggle != nullptr) {
+        for (int i = 0; i < toggles.size(); i++) {
+          if (toggles[i] == selectedToggle) {
+            selectedToggle = nullptr;
+            toggles[i] = NULL;
+            break;
+          }
+        }
+      }
     }
 
     // Handle gate deletion
     if (selectedGate != nullptr && movedGate == nullptr) {
-      // Delete connection
+      // Delete connections with selected gate as start point
+      for (int i = 0; i < connections.size(); i++) {
+        QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
+        if (startRect->contains(selectedGate->outputBounds.center())) {
+          // Connection found
+          QRectF *endRect = std::get<1>(*connections[i]);
+          connections[i] = nullptr;
+          i--;
+          // Update input of the gate connected to the end point
+          for (int j = 0; j < logicGates.size(); j++) {
+            for (int k = 0; k < logicGates[j]->inputBounds.size(); k++) {
+              QRectF inputBounds = logicGates[j]->inputBounds[k];
+              if (endRect->contains(inputBounds.center())) {
+                // Input found
+                logicGates[j]->inputs[k] = new bool(false);
+                continue;
+              }
+            }
+          }
+        }
+      }
+      // Delete connections with selected gate as end point
+      for (int i = 0; i < connections.size(); i++) {
+        QRectF *endRect = std::get<1>(*connections[i]);
+        for (int h = 0; h < selectedGate->inputBounds.size(); h++) {
+          if (endRect->contains(selectedGate->inputBounds[h].center())) {
+            // Connection found
+            connections[i] = nullptr;
+            i--;
+          }
+        }
+      }
+      // Delete selected gate
+      for (int i = 0; i < logicGates.size(); i++) {
+        if (logicGates[i] == selectedGate) {
+          selectedGate = nullptr;
+          logicGates[i] = nullptr;
+          break;
+        }
+      }
     }
   }
+
   // Handle up arrow key
   if (event->key() == Qt::Key_Up) {
     if (selectedGate != nullptr && movedGate == nullptr) {
@@ -667,7 +756,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
           QRectF inputBounds =
               selectedGate->inputBounds[selectedGate->inputs.size() - 1];
           if (endRect->contains(inputBounds.center())) {
-            connections.erase(connections.begin() + i);
+            connections.erase(connections.begin() + i,
+                              connections.begin() + i + 1);
           }
         }
         selectedGate->inputs.erase(selectedGate->inputs.end() - 1);
@@ -753,45 +843,49 @@ void MainWindow::timerEvent() {
 }
 
 void MainWindow::keepConnectionsIntact() {
-  for (Gate &g : logicGates) {
+  for (Gate *g : logicGates) {
+    if (g == nullptr)
+      continue;
     int f = -1, x = -1, y = -1, a = -1;
     std::vector<std::pair<int, int>> d;
     for (int i = 0; i < connections.size(); i++) {
       QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
       QRectF *endRect = std::get<1>(*connections[i]);
-      for (int z = 0; z < g.inputBounds.size(); z++) {
-        QRectF inputBounds = g.inputBounds[z];
+      for (int z = 0; z < g->inputBounds.size(); z++) {
+        QRectF inputBounds = g->inputBounds[z];
         if (endRect->contains(inputBounds.center())) {
           x = std::get<1>(std::get<0>(*connections[i]));
           y = i;
           d.emplace_back(x, y);
         }
       }
-      if (startRect->contains(g.outputBounds.center())) {
+      if (startRect->contains(g->outputBounds.center())) {
         f = i;
       }
     }
     if (f != -1) {
-      std::get<0>(std::get<0>(*connections[f])) = &g.outputBounds;
-      std::get<2>(*connections[f]) = &g.output;
+      std::get<0>(std::get<0>(*connections[f])) = &g->outputBounds;
+      std::get<2>(*connections[f]) = &g->output;
     }
     if (!creatingConnection)
       for (const auto &[x, y] : d) {
-        std::get<1>(*connections[y]) = &g.inputBounds[x];
-        g.inputs[x] = std::get<2>(*connections[y]);
+        std::get<1>(*connections[y]) = &g->inputBounds[x];
+        g->inputs[x] = std::get<2>(*connections[y]);
       }
   }
-  for (Toggle &t : toggles) {
+  for (Toggle *t : toggles) {
+    if (t == nullptr)
+      continue;
     int f = -1;
     for (int i = 0; i < connections.size(); i++) {
       QRectF *startRect = std::get<0>(std::get<0>(*connections[i]));
-      if (startRect->contains(t.outputBounds)) {
+      if (startRect->contains(t->outputBounds)) {
         f = i;
       }
     }
     if (f != -1) {
-      std::get<0>(std::get<0>(*connections[f])) = &t.outputBounds;
-      std::get<2>(*connections[f]) = &t.output;
+      std::get<0>(std::get<0>(*connections[f])) = &t->outputBounds;
+      std::get<2>(*connections[f]) = &t->output;
     }
   }
 }
@@ -852,8 +946,8 @@ void MainWindow::deleteWire(std::pair<QRectF, QRectF> a) {
       index = i;
       int inputIndex = -1;
       for (int j = 0; j < logicGates.size(); ++j) {
-        for (int k = 0; k < logicGates[j].inputBounds.size(); ++k) {
-          QRectF inputBounds = logicGates[j].inputBounds[k];
+        for (int k = 0; k < logicGates[j]->inputBounds.size(); ++k) {
+          QRectF inputBounds = logicGates[j]->inputBounds[k];
           if (endRect->contains(inputBounds.center())) {
             // Input found
             inputIndex = k;
@@ -862,7 +956,7 @@ void MainWindow::deleteWire(std::pair<QRectF, QRectF> a) {
         }
         if (inputIndex >= 0) {
           // Update input value
-          logicGates[j].inputs[inputIndex] = new bool(false);
+          logicGates[j]->inputs[inputIndex] = new bool(false);
           break;
         }
       }

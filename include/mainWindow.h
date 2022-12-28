@@ -40,6 +40,10 @@ protected:
   void keepConnectionsIntact();
   void handleButtonBar();
   void deleteWire(std::pair<QRectF, QRectF> a);
+  int insertIntoGap(
+      std::vector<std::tuple<std::pair<QRectF *, int>, QRectF *, bool *> *>
+          &connections,
+      std::tuple<std::pair<QRectF *, int>, QRectF *, bool *> *connection);
 
   void paintEvent(QPaintEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
@@ -70,8 +74,8 @@ private:
   std::vector<std::tuple<std::pair<QRectF *, int>, QRectF *, bool *> *>
       connections{};
   std::vector<QPainterPath> wirePaths;
-  std::vector<Gate> logicGates;
-  std::vector<Toggle> toggles;
+  std::vector<Gate *> logicGates;
+  std::vector<Toggle *> toggles;
   std::vector<Menu> menus;
   bool creatingConnection;
   QPainterPath selectedWire;
